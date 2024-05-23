@@ -14,10 +14,6 @@ public class LoginController {
     }
 
 
-    @GetMapping(value="/admin")
-    public String admin(){
-        return "admin";
-    }
 
 
 }
