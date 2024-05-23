@@ -32,11 +32,11 @@ public class WebSecurityConfig {
     public UserDetailsManager users(DataSource dataSource) {
         JdbcUserDetailsManager users = new JdbcUserDetailsManager(dataSource);
         //para loguearse sqlAuth -> username | password | enable
-        String sqlAuth = "SELECT email,pwd,id_rol FROM users where email = ?";
+        String sqlAuth = "SELECT u.correo,u.psw,u.enable FROM users u where correo = ?";
 
         //para autenticación -> username, nombre del rol
         String sqlAuto = "SELECT u.correo, r.nombre FROM users u " +
-                "inner join roles r on u.id_rol = r.id " +
+                "inner join roles r on u.rol_id = r.id " +
                 "where u.correo = ?";
 
         users.setUsersByUsernameQuery(sqlAuth);
@@ -48,6 +48,8 @@ public class WebSecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+
+        http.formLogin();
 
         http.authorizeHttpRequests()
                 .requestMatchers("/employee","/employee**").hasAnyAuthority("admin")
