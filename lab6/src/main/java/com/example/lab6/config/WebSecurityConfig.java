@@ -1,16 +1,27 @@
 package com.example.lab6.config;
 
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.JdbcUserDetailsManager;
 import org.springframework.security.provisioning.UserDetailsManager;
+import org.springframework.security.web.DefaultRedirectStrategy;
+import org.springframework.security.web.RedirectStrategy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.security.web.savedrequest.DefaultSavedRequest;
+import org.springframework.security.core.GrantedAuthority;
 
 import javax.sql.DataSource;
 import javax.xml.crypto.Data;
+import java.io.IOException;
 
 @Configuration
 public class WebSecurityConfig {
@@ -45,11 +56,38 @@ public class WebSecurityConfig {
     }
 
 
-
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
-        http.formLogin();
+        http.formLogin()
+                .loginPage("/loginForm")
+                .loginProcessingUrl("/processLogin")
+                .successHandler((request, response, authentication) -> {
+
+                    DefaultSavedRequest defaultSavedRequest =
+                            (DefaultSavedRequest) request.getSession().getAttribute("SPRING_SECURITY_SAVED_REQUEST");
+
+
+                    //si vengo por url -> defaultSR existe
+                    if (defaultSavedRequest != null) {
+                        String targetURl = defaultSavedRequest.getRequestURL();
+                        new DefaultRedirectStrategy().sendRedirect(request, response, targetURl);
+                    } else {
+                        String rol = "";
+                        for (GrantedAuthority role : authentication.getAuthorities()) {
+                            rol = role.getAuthority();
+                            break;
+                        }
+
+                        if (rol.equals("admin")) {
+                            response.sendRedirect("/admin");
+                        } else {
+                            response.sendRedirect("/loginForm");
+                        }
+                    }
+                });
+
+
 
         http.authorizeHttpRequests()
                 .requestMatchers("/employee","/employee**").hasAnyAuthority("admin")

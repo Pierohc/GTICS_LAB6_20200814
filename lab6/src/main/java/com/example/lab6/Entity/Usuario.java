@@ -23,5 +23,7 @@ public class Usuario {
     private String psw;
     @Column
     private Integer rol_id;
+    @Column
+    private Integer enable;
 
 }
